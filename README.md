@@ -1,62 +1,236 @@
-# SmartClearance — Unified Government Clearance & Single Window Gateway
+<div align="center">
+  <img src="public/logo.png" alt="SmartClearance Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);" />
+  <h1>SmartClearance</h1>
+  <p><strong>Unified Government Single Window Clearance & Compliance Scrutiny Platform</strong></p>
+  <p>Empowering businesses with streamlined statutory approvals and enabling departmental nodal officers with synchronized digital scrutiny.</p>
 
-[![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF.svg)](https://vitejs.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-4-38B2AC.svg)](https://tailwindcss.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Storage-3ECF8E.svg)](https://supabase.com/)
-
-A modern, full-lifecycle digital governance platform streamlining statutory approvals, inter-departmental clearances, document validation, and compliance tracking for businesses, industries, and government officers.
-
----
-
-## 🏛️ Overview
-
-Setting up and operating an industrial or commercial enterprise traditionally requires navigating multiple disjointed government departments (Fire Department, Pollution Control Board, Electricity Distribution, Factories Inspectorate, Municipal Corporation, etc.).
-
-**SmartClearance** solves this by delivering a unified **Single Window Clearance Gateway**:
-- **For Applicants & Entrepreneurs:** One common application docket, document reuse across departments, automatic compliance calendars, and transparent tracking against statutory service level agreements (SLAs).
-- **For Government Scrutiny Officers:** An integrated scrutiny console to inspect architectural drawings, issue digital stamps/approvals, and raise structured query requisitions with applicant notifications.
+  <p>
+    <a href="#-key-features"><img src="https://img.shields.io/badge/Status-Production%20Ready-emerald.svg" alt="Status" /></a>
+    <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-61DAFB.svg?logo=react&logoColor=black" alt="React" /></a>
+    <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-8-646CFF.svg?logo=vite&logoColor=white" alt="Vite" /></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.x-3178C6.svg?logo=typescript&logoColor=white" alt="TypeScript" /></a>
+    <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-4.x-38B2AC.svg?logo=tailwind-css&logoColor=white" alt="Tailwind" /></a>
+    <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-Integrated-3ECF8E.svg?logo=supabase&logoColor=white" alt="Supabase" /></a>
+    <a href="#-license"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License" /></a>
+  </p>
+</div>
 
 ---
 
-## ✨ Key Features
-
-### 🏢 Entrepreneur & Applicant Portal
-- **Consolidated Dashboard:** Real-time visibility into overall clearance progress, pending inspections, active subsidies, and risk alerts.
-- **My Approvals Register:** Step-by-step statutory progress tracking (Fire NOC, Factory License, MSEDCL Power Feeder, Tree Felling Clearance, Air & Water Consent to Operate).
-- **Interactive Approval Navigator:** Guided checklist determining exact clearances required based on industry type, investment size, power requirement, and land classification.
-- **Unified Document Vault:** Central repository with digital pre-validation and inter-departmental document reuse to eliminate duplicate submissions.
-- **AI-Powered OCR & Auto-Extraction:** Extracts key details (registration IDs, validity dates, authorized signatories) and checks document validity automatically.
-- **Gov Schemes & Subsidies:** Direct eligibility calculator and application flow for capital subsidies, electricity duty exemptions, and green industry incentives.
-- **Common Inspection Platform:** Synchronized joint-inspections across departments to prevent repetitive physical site visits.
-- **Statutory Grievance & SLA Escalation:** Automatic deadline monitoring with 1-click legal escalations to the Appellate Authority if departments breach statutory response timeframes.
-
-### 🛡️ Officer & Scrutiny Console (Admin)
-- **Unified Inward Register:** Real-time scrutiny pipeline for departmental nodal officers.
-- **Digital Stamping & Sanction:** Instant 1-click statutory approval issuing digital sanction certificates.
-- **Deficiency Requisition:** Formal query dispatch system allowing officers to request revised engineering plans or clarifications directly.
-- **Dossier Inspection Viewer:** High-fidelity document viewer inspecting UIDAI / MCA pre-validated attachments.
-
----
-
-## 🛠️ Tech Stack
-
-- **Frontend:** React 18, TypeScript, Vite
-- **Styling:** Tailwind CSS, Lucide Icons
-- **State Management:** React Context API with persistent synchronized storage
-- **Backend & Cloud Storage:** Supabase (PostgreSQL database & Storage Buckets)
-- **Deployment Ready:** Vercel, Netlify, Cloud Run, Docker
+## 📖 Table of Contents
+1. [Executive Summary & Problem Statement](#-executive-summary--problem-statement)
+2. [Dual-Persona Architecture](#-dual-persona-architecture)
+3. [Comprehensive Feature Walkthrough](#-comprehensive-feature-walkthrough)
+   - [Applicant / Entrepreneur Experience](#1-applicant--entrepreneur-experience)
+   - [Government Officer Scrutiny Console](#2-government-officer-scrutiny-console)
+   - [AI & Intelligence Engine](#3-ai--intelligence-engine)
+4. [System Architecture & Data Flow](#-system-architecture--data-flow)
+5. [Directory & Project Structure](#-directory--project-structure)
+6. [Tech Stack & Dependencies](#-tech-stack--dependencies)
+7. [Installation & Local Setup](#-installation--local-setup)
+8. [Supabase Cloud Storage Integration](#-supabase-cloud-storage-integration)
+9. [Demo Accounts & User Switching](#-demo-accounts--user-switching)
+10. [Deployment Guide](#-deployment-guide)
+11. [Roadmap](#-roadmap)
+12. [License & Acknowledgments](#-license--acknowledgments)
 
 ---
 
-## 🚀 Getting Started
+## 🏛️ Executive Summary & Problem Statement
+
+Setting up, commissioning, and operating an industrial manufacturing plant or commercial establishment is traditionally hindered by administrative friction:
+- **Fragmented Portals:** Entrepreneurs must juggle 12+ separate state and municipal websites (Fire Service, Pollution Control Board, Electricity Utility, Town Planning, Factories Inspectorate, Water Board).
+- **Repetitive Submissions:** Identical copies of structural layouts, certificates of incorporation, environmental impact assessments, and land titles must be repeatedly uploaded and physically submitted.
+- **Unclear Statutory Dependencies:** Approvals often depend on prerequisite clearances (e.g., Factory Building Plan requires prior Town Planning and Fire Safety NOCs), leading to avoidable delays.
+- **Black-Box Scrutiny & SLA Violations:** Applicants lack visibility into the exact desk or officer reviewing their file, making statutory dispute or delay escalation cumbersome.
+
+**SmartClearance** addresses these challenges through a unified **Single Window Clearance System (SWCS)** engineered with **Government-to-Business (G2B)** and **Government-to-Government (G2G)** synchronization.
+
+---
+
+## 👥 Dual-Persona Architecture
+
+SmartClearance operates with synchronized role-based contexts:
+
+| Persona | Primary Goals | Key Capabilities |
+| :--- | :--- | :--- |
+| **🏢 Business / Entrepreneur** | Fast project commissioning & compliance certainty | Multi-stage tracker, Approval Navigator, Common Inspection booking, Auto-Doc Vault, Subsidy claims, 1-click SLA Escalation. |
+| **🛡️ Statutory Officer** | Efficient scrutiny & risk-free legal sanctions | Unified Inward Register, Digital Stamping, Formal Deficiency Requisition, Pre-validated MCA/UIDAI dossier inspections. |
+
+State is live-synchronized via React Context and Supabase — when an officer sanctions an application or raises a query, the applicant receives an instant notification and updated timeline status in real-time.
+
+---
+
+## 🚀 Comprehensive Feature Walkthrough
+
+### 1. Applicant / Entrepreneur Experience
+
+#### 📊 Consolidated Executive Dashboard
+- **Real-Time KPIs:** Live clearance count, approved & active licenses, pending scrutiny dockets, and active capital subsidies.
+- **Overall Commissioning Gauge:** Dynamic circular percentage tracking enterprise readiness for statutory commercial operation.
+- **Interactive Stepper:** Visual tracking of application stages: *Drafting ➔ Submitted ➔ Scrutiny ➔ Site Inspection ➔ Statutory Sanction*.
+
+#### 📋 My Approvals Register & Application Dossier
+- Complete catalog of state clearances:
+  - **Fire NOC** (Directorate of Fire & Emergency Services)
+  - **MSEDCL High-Tension (HT) Power Feeder Sanction** (State Electricity Distribution)
+  - **Factory License (Form 2)** (Directorate of Industrial Safety & Health - DISH)
+  - **Air & Water Consent to Operate (CTO)** (State Pollution Control Board - SPCB)
+  - **Tree Felling & Green Corridor Exemption** (Forest & Tree Authority)
+- **Detailed Docket Inspection:** Per-clearance document requirements, officer notes, statutory fees breakdown, and expected SLA countdowns.
+
+#### 🧭 Smart Approval Navigator
+- Decision-tree checklist filtering exact statutory clearances based on:
+  - **Industry Classification:** Red / Orange / Green / White Category (Pollution Index).
+  - **Capital Investment:** Micro (< ₹1 Cr), Small (< ₹10 Cr), Medium (< ₹50 Cr), Large (> ₹50 Cr).
+  - **Power & Utility Demands:** Low Tension (LT) vs. Dedicated 11kV/33kV HT lines.
+  - **Location & Zoning:** MIDC Industrial Zone, Special Economic Zone (SEZ), Municipal Area, or Non-Agricultural (NA) converted land.
+
+#### 🗄️ Unified Document Vault with Inter-Departmental Reuse
+- Upload once, submit everywhere: Validated files are tagged with cryptographic hashes.
+- Categorized dossier: Architectural Layouts, PAN/GST Certificates, EIA Reports, Machine Catalogs, Property Titles.
+- Supports instant upload to Supabase Storage with local cached fallback.
+
+#### 💰 Schemes, Subsidies & Incentives Engine
+- Direct eligibility calculator for industrial policies:
+  - **Capital Investment Subsidy:** Up to 25% grant on eligible plant & machinery.
+  - **Electricity Duty Waiver:** 100% exemption for 7 consecutive years in backward districts.
+  - **Green Industry & Effluent Treatment Grant:** Subsidies for Zero Liquid Discharge (ZLD) plants.
+  - **Stamp Duty & Registration Refund:** Complete waiver on industrial land conveyance deeds.
+
+#### 🔍 Common Inspection Platform (Joint Visits)
+- Harmonizes scheduling so that Fire, Factories, and Environmental inspectors visit the industrial site simultaneously.
+- Eliminates multiple site disruptions and conflicting departmental inspection notes.
+
+#### ⚖️ Statutory Grievance & SLA Delay Escalation
+- Automated SLA monitoring based on Public Services Delivery Guarantee Acts (e.g., Right to Public Services Act).
+- If statutory deadlines expire, the entrepreneur can trigger a **1-Click Escalation to the First Appellate Authority**, with automated timestamped tracking.
+
+---
+
+### 2. Government Officer Scrutiny Console
+
+- **Unified Inward Register:** Filter applications across *All Requests*, *Under Scrutiny*, *Queries Raised*, and *Sanctioned*.
+- **Quick Search & Filter:** Instant multi-field search by application reference (`APP-2026-FIRE-01`), department, or clearance title.
+- **1-Click Statutory Sanction:** Issues digitally signed approval certificates, moving the applicant's status to **Approved**.
+- **Formal Query / Deficiency Requisition:** Dispatches specific engineering queries (e.g., *"Setback distance in North elevation layout lacks 6-meter fire tender turning radius"*), transitioning the status to **Query Raised** and notifying the business.
+- **Document Scrutiny Bench:** Officers can inspect raw PDFs, view MCA/UIDAI verified hashes, and click **Mark Verified** on individual submitted drawings.
+
+---
+
+### 3. AI & Intelligence Engine
+
+- **Automated Document Field Extraction:** Simulates intelligent OCR parsing of uploaded files, extracting registered entity names, license validity dates, and authorized signatories.
+- **Predictive Clearance Timeline:** Estimates approval completion based on historical departmental processing averages.
+- **Built-in AI Assistant:** In-portal contextual assistant answering questions regarding industrial zoning rules, statutory fee schedules, and required NOC checklists.
+
+---
+
+## 📐 System Architecture & Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Client Frontend (React 19)                 │
+├───────────────────────────────┬─────────────────────────────────┤
+│    🏢 Entrepreneur Portal     │     🛡️ Officer Scrutiny Console  │
+│  - Approvals & Navigator      │  - Inward Register              │
+│  - Document Vault             │  - Digital Sanction Stamping    │
+│  - Schemes & Common Inspect   │  - Query / Deficiency Dispatch  │
+│  - SLA Delay Escalation       │  - Pre-validated Verification   │
+└───────────────┬───────────────┴─────────────────┬───────────────┘
+                │                                 │
+                ▼                                 ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   AppContext (Shared State Sync)                │
+│       - Reactive State Synchronization across User & Officer    │
+│       - Persistent Local Storage & Status Tracking              │
+└───────────────┬─────────────────────────────────┬───────────────┘
+                │                                 │
+                ▼                                 ▼
+┌───────────────────────────────┐ ┌───────────────────────────────┐
+│        Supabase Cloud         │ │        AI / Gemini Engine     │
+│  - PostgreSQL Database        │ │  - Document OCR & Extraction  │
+│  - Document Storage Buckets   │ │  - Intelligent Query Support  │
+└───────────────────────────────┘ └───────────────────────────────┘
+```
+
+---
+
+## 📁 Directory & Project Structure
+
+```
+smart-clearance/
+├── public/                       # Public static assets & favicon icons
+│   ├── app-logo.png              # Primary application high-res icon
+│   ├── logo.png                  # Brand logo
+│   └── placeholder-*.svg         # Asset placeholders
+├── src/
+│   ├── assets/                   # Vector graphics and UI illustrations
+│   ├── components/               # Modular reusable UI components
+│   │   ├── CircularProgress.tsx  # Animated completion rings
+│   │   ├── Logo.tsx              # Brand logo & responsive marks
+│   │   ├── Sidebar.tsx           # Collapsible navigation drawer
+│   │   ├── StatusBadge.tsx       # Color-coded statutory status pills
+│   │   ├── Stepper.tsx           # Multi-step progress bars
+│   │   └── TopBar.tsx            # Global search, profile, notifications
+│   ├── context/
+│   │   └── AppContext.tsx        # Centralized state (approvals, docs, sync)
+│   ├── data/
+│   │   └── mockData.ts           # Initial departmental clearance dockets
+│   ├── lib/
+│   │   └── supabase.ts           # Supabase client initializer
+│   ├── pages/                    # Core view routing
+│   │   ├── AdminDashboardPage.tsx # Statutory Officer scrutiny bench
+│   │   ├── AIAssistantPage.tsx   # Conversational assistance
+│   │   ├── AIInsightsPage.tsx    # Predictive compliance analytics
+│   │   ├── ApplicationDetailPage.tsx # Drill-down dossier scrutiny
+│   │   ├── ApprovalNavigatorPage.tsx # Guided checklist questionnaire
+│   │   ├── CompliancePage.tsx    # Recurring statutory compliance
+│   │   ├── DashboardPage.tsx     # Entrepreneur master overview
+│   │   ├── DocumentsPage.tsx     # Centralized Document Vault
+│   │   ├── GovernmentServicesPage.tsx # Service catalog directory
+│   │   ├── GrievancesPage.tsx    # SLA delay grievance escalation
+│   │   ├── InspectionsPage.tsx   # Joint physical inspection manager
+│   │   ├── LandingPage.tsx       # Public informational gateway
+│   │   ├── LoginPage.tsx         # Dual-role authentication screen
+│   │   ├── MyApprovalsPage.tsx   # Detailed clearance register
+│   │   ├── NotificationsPage.tsx # Actionable alerts & query updates
+│   │   ├── ProfilePage.tsx       # Industrial enterprise credentials
+│   │   └── SchemesPage.tsx       # State subsidies & financial grants
+│   ├── types/                    # TypeScript interfaces & types
+│   ├── App.tsx                   # Main app router & role switchboard
+│   ├── index.css                 # Tailwind CSS v4 styling rules
+│   └── main.tsx                  # Application entry point
+├── .env.example                  # Environment template
+├── index.html                    # HTML entry point with metadata
+├── package.json                  # Dependencies and build scripts
+├── tsconfig.json                 # TypeScript compiler configuration
+└── vite.config.ts                # Vite build configuration
+```
+
+---
+
+## 💻 Tech Stack & Dependencies
+
+| Layer | Technology | Details |
+| :--- | :--- | :--- |
+| **Framework** | [React 19](https://react.dev/) | Modern functional components, hooks, concurrent features |
+| **Tooling** | [Vite 8](https://vitejs.dev/) | Lightning-fast HMR and bundle optimization |
+| **Language** | [TypeScript 5](https://www.typescriptlang.org/) | End-to-end type safety and explicit interfaces |
+| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) | Modern utility-first CSS with direct color token customization |
+| **Icons** | [Lucide React](https://lucide.dev/) | Clean, accessible vector icons |
+| **Cloud Storage** | [Supabase](https://supabase.com/) | PostgreSQL backend and resilient S3-compatible file storage |
+| **Animation** | Motion / CSS3 | Micro-interactions and animated state transitions |
+
+---
+
+## 🛠️ Installation & Local Setup
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (version 18 or higher recommended)
-- `npm` or `bun` or `yarn`
+- **Node.js** >= 18.0.0
+- **npm**, **yarn**, or **bun**
 
-### Installation
+### Step-by-Step Setup
 
 1. **Clone the repository:**
    ```bash
@@ -64,82 +238,99 @@ Setting up and operating an industrial or commercial enterprise traditionally re
    cd smart-clearance
    ```
 
-2. **Install dependencies:**
+2. **Install project dependencies:**
    ```bash
    npm install
    ```
 
-3. **Set up Environment Variables:**
-   Copy the example environment file:
+3. **Configure Environment Variables:**
    ```bash
    cp .env.example .env
    ```
-   Add your Supabase credentials (optional for local mock testing, required for live cloud document storage):
-   ```env
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-anon-public-key
-   VITE_SUPABASE_STORAGE_BUCKET=documents
-   ```
+   *(Optional: If connecting live Supabase storage, fill in the values described below. The app operates out-of-the-box in local mode without credentials).*
 
-4. **Run the Development Server:**
+4. **Start the local development server:**
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+   Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+5. **Typecheck & Lint:**
+   ```bash
+   npm run lint
+   ```
 
 ---
 
-## 🔑 Demo Login Accounts
+## ☁️ Supabase Cloud Storage Integration
 
-You can test both user roles directly from the login gateway:
+To allow real-time binary document uploads into a centralized cloud repository:
 
-| Role | Email | Password | Access Area |
+1. Sign in to your dashboard at [supabase.com](https://supabase.com) and create a project.
+2. In the left navigation, click on **Storage**.
+3. Click **New Bucket**, name it `documents`, and ensure **Public Bucket** is checked.
+4. Open **Project Settings > API** and copy:
+   - **Project URL**
+   - **anon public API Key**
+5. Add these credentials into your `.env` file:
+   ```env
+   VITE_SUPABASE_URL=https://xxxxxxxxxxxxxxxxxxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   VITE_SUPABASE_STORAGE_BUCKET=documents
+   ```
+Uploaded files in the **Document Vault** will automatically upload to Supabase Storage with verifiable public URLs!
+
+---
+
+## 🔑 Demo Accounts & User Switching
+
+You can switch between roles dynamically or test authentication:
+
+| Role | Username / Email | Password | Included Features |
 | :--- | :--- | :--- | :--- |
-| **Applicant / Business** | `entrepreneur@industry.com` | *(any 4+ chars)* | Full Entrepreneur Dashboard, Clearance Navigator, Subsidies |
-| **Statutory Officer** | `officer@singlewindow.gov.in` | *(any 4+ chars)* | Department Scrutiny Console, Digital Approvals & Query Desk |
+| **Applicant / Business** | `entrepreneur@industry.com` | `admin123` *(any)* | Full business dashboard, approval tracking, document vault, subsidy applications |
+| **Statutory Scrutiny Officer** | `officer@singlewindow.gov.in` | `admin123` *(any)* | Department Inward Register, digital document verification, statutory sanction, query dispatch |
 
-*(Demo accounts are pre-filled on the login screen for 1-click testing)*
-
----
-
-## 🗄️ Supabase Storage Setup (2 Minutes)
-
-To enable live file uploads directly to Supabase Storage:
-
-1. Create a project at [supabase.com](https://supabase.com).
-2. Go to **Storage** > Click **New Bucket**.
-3. Name the bucket **`documents`** and toggle **Public Bucket** to **ON**.
-4. In your project settings, copy your **Project URL** and **anon public key**.
-5. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your `.env` or Vercel environment variables.
+> **Pro-Tip:** While logged in as an Officer, use the **"Switch to Applicant View"** button in the top navigation bar to instantaneously inspect the entrepreneur perspective!
 
 ---
 
-## 📦 Build for Production
+## 🚢 Deployment Guide
 
-To create an optimized production build:
+### Deploying on Vercel
 
+1. Push the code to a GitHub repository.
+2. Visit [Vercel](https://vercel.com/) and click **Add New Project**.
+3. Select your repository. Vercel automatically detects the Vite configuration:
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+4. Add your Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
+5. Click **Deploy**.
+
+### Building for Docker / Production Server
 ```bash
+# Build the production bundle
 npm run build
-```
 
-Preview the production build locally:
-```bash
-npm run preview
+# Preview locally
+npm run preview -- --port 8080
 ```
 
 ---
 
-## 🚢 Deploying to Vercel
+## 🗺️ Roadmap
 
-1. Push your repository to GitHub.
-2. Import the project in [Vercel](https://vercel.com).
-3. Under **Settings > Environment Variables**, add:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-4. Click **Deploy**.
+- [x] Single Window Clearance Dashboard & Progress Trackers
+- [x] Multi-persona Officer Scrutiny Console & Digital Stamping
+- [x] Unified Document Vault with Pre-Validation Hashes
+- [x] Automated SLA Breach & 1-Click Appellate Escalation
+- [x] Cloud Storage synchronization via Supabase
+- [ ] DigiLocker & MCA21 direct API integration
+- [ ] Multi-lingual interface support (Regional languages)
+- [ ] Geo-tagged GIS site inspection photographic logs
 
 ---
 
-## 📜 License
+## 📄 License & Acknowledgments
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the **MIT License** — feel free to modify and distribute for both commercial and public-sector digital initiatives.
