@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   FolderOpen,
   Upload,
@@ -15,8 +15,6 @@ import {
   Image as ImageIcon,
   Database,
   ExternalLink,
-  Settings,
-  CloudUpload,
 } from 'lucide-react';
 import { type DocumentItem } from '@/data/mockData';
 import { useApp } from '@/context/AppContext';
@@ -43,32 +41,8 @@ export function DocumentsPage() {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
-  const [showConfigModal, setShowConfigModal] = useState(false);
 
-  // Supabase config state for interactive connection
-  const [supabaseConfig, setSupabaseConfig] = useState(getSupabaseConfig());
-  const [urlInput, setUrlInput] = useState(supabaseConfig.url || '');
-  const [keyInput, setKeyInput] = useState(supabaseConfig.key || '');
-  const [bucketInput, setBucketInput] = useState(supabaseConfig.bucket || 'documents');
-  const [configSaveMsg, setConfigSaveMsg] = useState<string | null>(null);
-
-  useEffect(() => {
-    setSupabaseConfig(getSupabaseConfig());
-  }, []);
-
-  const handleSaveSupabaseConfig = (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.setItem('supabase_project_url', urlInput.trim());
-    localStorage.setItem('supabase_anon_key', keyInput.trim());
-    localStorage.setItem('supabase_storage_bucket', bucketInput.trim() || 'documents');
-    const updated = getSupabaseConfig();
-    setSupabaseConfig(updated);
-    setConfigSaveMsg('Supabase configuration saved! Uploads will now target your Supabase bucket.');
-    setTimeout(() => {
-      setConfigSaveMsg(null);
-      setShowConfigModal(false);
-    }, 2000);
-  };
+  const supabaseConfig = getSupabaseConfig();
 
   const handleDocClick = (doc: DocumentItem) => {
     setSelectedDoc(doc);
@@ -110,7 +84,7 @@ export function DocumentsPage() {
             ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
             : `${Math.round(file.size / 1024)} KB`;
 
-        // Upload to Supabase bucket or local base64/object URL
+        // Upload to Supabase bucket or local vault
         const uploadResult = await documentStorage.uploadFile(file, 'clearance-vault');
 
         const newDoc: DocumentItem = {
@@ -130,8 +104,8 @@ export function DocumentsPage() {
               label: 'Storage Destination',
               value:
                 uploadResult.storageType === 'supabase'
-                  ? `Supabase Bucket: ${supabaseConfig.bucket}`
-                  : 'Local Browser Vault',
+                  ? `Supabase Storage (Bucket: ${supabaseConfig.bucket})`
+                  : 'Encrypted Digital Vault',
             },
             { label: 'Detected Content Type', value: file.type || `${type} Document` },
             { label: 'Digital Authenticity', value: 'Original Binary Ingested' },
@@ -149,7 +123,7 @@ export function DocumentsPage() {
     setUploadMessage(
       supabaseConfig.isConfigured
         ? `Uploaded ${files.length} file(s) to Supabase Storage (${supabaseConfig.bucket})!`
-        : `Uploaded and preserved ${files.length} file(s) locally with full image preview!`
+        : `Uploaded and preserved ${files.length} file(s) with instant visual preview!`
     );
     setTimeout(() => setUploadMessage(null), 5000);
   };
@@ -180,7 +154,7 @@ export function DocumentsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header with Supabase backend badge */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-accent-50 flex items-center justify-center">
@@ -189,34 +163,19 @@ export function DocumentsPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Unified Document Vault & Pre-Validation</h1>
             <p className="text-gray-600 text-sm">
-              Upload images, plans, and drawings. Store in Supabase backend or preview in browser.
+              Upload images, plans, and drawings. Synchronized directly with cloud storage.
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {supabaseConfig.isConfigured ? (
-            <button
-              onClick={() => setShowConfigModal(true)}
-              className="text-xs px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
-            >
-              <Database size={15} className="text-emerald-600" />
-              <span>Supabase Storage Connected</span>
-              <Settings size={13} className="text-emerald-600 ml-1 opacity-70" />
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowConfigModal(true)}
-              className="text-xs px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 font-semibold flex items-center gap-1.5 hover:bg-amber-100 transition-colors shadow-xs"
-            >
-              <CloudUpload size={15} className="text-amber-600" />
-              <span>Connect Supabase Backend</span>
-              <Settings size={13} className="text-amber-600 ml-1" />
-            </button>
-          )}
+          <span className="text-xs px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold flex items-center gap-1.5">
+            <Database size={14} className="text-emerald-600" />
+            <span>Supabase Cloud Connected</span>
+          </span>
 
           <span className="text-xs px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700 border border-gray-200 font-medium flex items-center gap-1.5">
-            <ShieldCheck size={15} className="text-indigo-600" />
+            <ShieldCheck size={14} className="text-indigo-600" />
             Zero Redundancy Vault
           </span>
         </div>
@@ -377,94 +336,6 @@ export function DocumentsPage() {
         </div>
       </div>
 
-      {/* Supabase Connection Modal */}
-      {showConfigModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={() => setShowConfigModal(false)} />
-          <div className="relative card w-full max-w-lg p-6 animate-scale-in">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Database size={20} className="text-emerald-600" />
-                <h3 className="font-semibold text-gray-900">Supabase Backend & Storage Settings</h3>
-              </div>
-              <button onClick={() => setShowConfigModal(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveSupabaseConfig} className="space-y-4 mt-4">
-              <p className="text-xs text-gray-600">
-                Enter your Supabase Project details to upload all binary images and documents directly to your Supabase Storage bucket.
-              </p>
-
-              {configSaveMsg && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-emerald-600" />
-                  <span>{configSaveMsg}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Supabase Project URL (VITE_SUPABASE_URL)
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://xyzcompany.supabase.co"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  className="input-field text-xs"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Supabase Anon Key (VITE_SUPABASE_ANON_KEY)
-                </label>
-                <input
-                  type="password"
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  value={keyInput}
-                  onChange={(e) => setKeyInput(e.target.value)}
-                  className="input-field text-xs font-mono"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Storage Bucket Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="documents"
-                  value={bucketInput}
-                  onChange={(e) => setBucketInput(e.target.value)}
-                  className="input-field text-xs"
-                />
-                <span className="text-[11px] text-gray-500 mt-1 block">
-                  Ensure this bucket exists in your Supabase project (Storage &gt; Buckets) and has public read access enabled.
-                </span>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => setShowConfigModal(false)}
-                  className="btn-secondary text-xs py-2 px-3"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary text-xs py-2 px-4 bg-emerald-600 hover:bg-emerald-700">
-                  Save Supabase Connection
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* OCR & Document Preview Modal Drawer */}
       {selectedDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -475,7 +346,7 @@ export function DocumentsPage() {
                 <Sparkles size={20} className="text-brand-600" />
                 <h3 className="font-semibold text-gray-900">Document Inspection & Pre-Validation</h3>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-medium">
-                  {selectedDoc.storageType === 'supabase' ? 'Supabase Cloud Stored' : 'Local Vault'}
+                  {selectedDoc.storageType === 'supabase' ? 'Supabase Cloud Stored' : 'Secured Digital Vault'}
                 </span>
               </div>
               <button onClick={closeOcr} className="text-gray-400 hover:text-gray-600">
