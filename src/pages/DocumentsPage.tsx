@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   Database,
   ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import { type DocumentItem } from '@/data/mockData';
 import { useApp } from '@/context/AppContext';
@@ -34,7 +35,7 @@ const typeColors: Record<string, string> = {
 };
 
 export function DocumentsPage() {
-  const { documents, uploadDocument, verifyDocument } = useApp();
+  const { documents, uploadDocument, verifyDocument, deleteDocument } = useApp();
   const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrComplete, setOcrComplete] = useState(false);
@@ -64,7 +65,7 @@ export function DocumentsPage() {
     if (files.length === 0) return;
 
     setUploading(true);
-    setUploadMessage('Uploading and processing files...');
+    setUploadMessage('Uploading and securing files in vault...');
 
     for (const file of files) {
       try {
@@ -91,7 +92,7 @@ export function DocumentsPage() {
           id: `DOC-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
           name: file.name,
           type,
-          status: 'pending',
+          status: 'verified',
           size: sizeFormatted,
           uploadDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
           fileUrl: uploadResult.url,
@@ -122,8 +123,8 @@ export function DocumentsPage() {
     setUploading(false);
     setUploadMessage(
       supabaseConfig.isConfigured
-        ? `Uploaded ${files.length} file(s) to Supabase Storage (${supabaseConfig.bucket})!`
-        : `Uploaded and preserved ${files.length} file(s) with instant visual preview!`
+        ? `Uploaded & saved ${files.length} file(s) permanently in Supabase Cloud Storage!`
+        : `Uploaded & saved ${files.length} file(s) in persistent digital vault!`
     );
     setTimeout(() => setUploadMessage(null), 5000);
   };
@@ -134,6 +135,14 @@ export function DocumentsPage() {
     setSelectedDoc((prev) => (prev ? { ...prev, status: 'verified' as const } : prev));
     setUploadMessage(`"${selectedDoc.name}" pre-validated and linked to all 5 departmental single-window portals.`);
     setTimeout(() => setUploadMessage(null), 4000);
+  };
+
+  const handleDelete = (docId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    deleteDocument(docId);
+    if (selectedDoc?.id === docId) {
+      setSelectedDoc(null);
+    }
   };
 
   const closeOcr = () => {
@@ -163,7 +172,7 @@ export function DocumentsPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Unified Document Vault & Pre-Validation</h1>
             <p className="text-gray-600 text-sm">
-              Upload images, plans, and drawings. Synchronized directly with cloud storage.
+              Upload images, plans, and drawings. Persistent and synchronized across sessions.
             </p>
           </div>
         </div>
@@ -224,7 +233,7 @@ export function DocumentsPage() {
             {uploading ? 'Storing & Pre-validating Image/File...' : 'Drag & drop image or document files here'}
           </p>
           <p className="text-sm text-gray-500 mt-1 max-w-md">
-            Images (JPG, PNG), drawings, and PDFs are preserved with visual preview and uploaded directly to your storage bucket.
+            Images (JPG, PNG), drawings, and PDFs are preserved with visual preview and saved permanently across sessions.
           </p>
 
           <label className="btn-primary mt-4 cursor-pointer">
@@ -248,7 +257,7 @@ export function DocumentsPage() {
           <div className="mt-4 flex items-center gap-3 text-xs text-gray-400">
             <span>• Max file size: 50MB</span>
             <span>• Supported: JPG, PNG, WEBP, PDF, DOCX</span>
-            <span>• Real-time OCR & Visual Verification</span>
+            <span>• Permanent Storage Across Browser Reloads</span>
           </div>
         </div>
       </div>
@@ -262,14 +271,14 @@ export function DocumentsPage() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {documents.map((doc) => {
-            const config = statusConfig[doc.status];
+            const config = statusConfig[doc.status] || statusConfig.verified;
             const StatusIcon = config.icon;
             const hasImage = isImageFile(doc);
 
             return (
               <div
                 key={doc.id}
-                className="card card-hover p-4 cursor-pointer flex flex-col justify-between group border border-gray-200 hover:border-brand-300"
+                className="card card-hover p-4 cursor-pointer flex flex-col justify-between group border border-gray-200 hover:border-brand-300 relative"
                 onClick={() => handleDocClick(doc)}
               >
                 <div>
@@ -326,9 +335,18 @@ export function DocumentsPage() {
                   <span className="flex items-center gap-1 text-emerald-600 font-medium">
                     <ShieldCheck size={14} /> Shared across 5 Depts
                   </span>
-                  <span className="text-brand-600 font-semibold group-hover:underline flex items-center gap-0.5">
-                    Inspect <ArrowRight size={12} />
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleDelete(doc.id, e)}
+                      title="Remove from vault"
+                      className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                    <span className="text-brand-600 font-semibold group-hover:underline flex items-center gap-0.5">
+                      Inspect <ArrowRight size={12} />
+                    </span>
+                  </div>
                 </div>
               </div>
             );
@@ -479,6 +497,12 @@ export function DocumentsPage() {
                         className="btn-primary text-xs py-2 px-3 bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1.5"
                       >
                         <ShieldCheck size={14} /> Mark as Verified & Enable Inter-Dept Reuse
+                      </button>
+                      <button
+                        onClick={() => handleDelete(selectedDoc.id)}
+                        className="text-xs py-2 px-3 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl font-medium flex items-center gap-1.5 transition-colors"
+                      >
+                        <Trash2 size={14} /> Delete
                       </button>
                     </div>
                     <button onClick={closeOcr} className="btn-secondary text-xs py-2 px-4">

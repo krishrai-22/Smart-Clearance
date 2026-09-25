@@ -8,6 +8,7 @@ import {
   type NotificationItem,
   type ApprovalStatus,
 } from '@/data/mockData';
+import { documentVaultDB, documentStorage, getSupabaseConfig } from '@/lib/supabase';
 
 interface NewApplicationPayload {
   name: string;
@@ -28,6 +29,7 @@ interface AppContextType {
   respondToQuery: (appId: string, responseNote: string, attachedDocName?: string) => void;
   verifyDocument: (docIdOrName: string) => void;
   uploadDocument: (doc: DocumentItem) => void;
+  deleteDocument: (docId: string) => void;
   markNotificationAsRead: (id: string) => void;
 }
 
@@ -53,12 +55,98 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [documents, setDocuments] = useState<DocumentItem[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY_DOCS);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: DocumentItem[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
     } catch {
       // Fallback
     }
     return initialDocuments;
   });
+
+  // Hydrate from IndexedDB and Supabase Storage on launch so data persists across browser sessions
+  useEffect(() => {
+    let isMounted = true;
+
+    async function hydratePersistentDocuments() {
+      try {
+        // 1. Check IndexedDB for any large images or uploaded documents
+        const savedIndexedDocs = (await documentVaultDB.getAllDocuments()) as unknown as DocumentItem[];
+
+        // 2. Check remote Supabase Storage for files uploaded by this or other sessions
+        let remoteSupabaseDocs: DocumentItem[] = [];
+        const config = getSupabaseConfig();
+        if (config.isConfigured) {
+          try {
+            const remoteFiles = await documentStorage.listRemoteFiles('clearance-vault');
+            remoteSupabaseDocs = remoteFiles.map((file) => {
+              const fileExt = (file.name.split('.').pop() || 'dat').toUpperCase();
+              const type: 'PDF' | 'JPG' | 'PNG' | 'DOCX' =
+                fileExt === 'JPG' || fileExt === 'JPEG'
+                  ? 'JPG'
+                  : fileExt === 'PNG'
+                  ? 'PNG'
+                  : fileExt === 'DOCX'
+                  ? 'DOCX'
+                  : 'PDF';
+
+              return {
+                id: `SUPA-${file.name}`,
+                name: file.name.replace(/^\d+-/, ''),
+                type,
+                status: 'verified' as const,
+                size: file.size > 1024 * 1024 ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : `${Math.round(file.size / 1024)} KB`,
+                uploadDate: 'Synced from Supabase',
+                fileUrl: file.url,
+                previewUrl: file.url,
+                storageType: 'supabase' as const,
+                storagePath: file.path,
+                extractedData: [
+                  { label: 'File Name', value: file.name },
+                  { label: 'Storage Source', value: `Supabase Cloud Bucket (${config.bucket})` },
+                  { label: 'Cloud Public URL', value: file.url },
+                  { label: 'Pre-Validation Scrutiny', value: '100% Passed (Statutory Cloud Vault)' },
+                ],
+              };
+            });
+          } catch (e) {
+            console.warn('Could not sync remote Supabase files:', e);
+          }
+        }
+
+        if (!isMounted) return;
+
+        // Merge: existing in state, IndexedDB docs, remote Supabase docs, initial mock docs
+        setDocuments((currentDocs) => {
+          const map = new Map<string, DocumentItem>();
+
+          // Base initial docs
+          initialDocuments.forEach((d) => map.set(d.id, d));
+          // Current in-memory docs
+          currentDocs.forEach((d) => map.set(d.id, d));
+          // IndexedDB docs
+          if (Array.isArray(savedIndexedDocs)) {
+            savedIndexedDocs.forEach((d) => map.set(d.id, d));
+          }
+          // Supabase storage docs
+          remoteSupabaseDocs.forEach((d) => map.set(d.id, d));
+
+          return Array.from(map.values());
+        });
+      } catch (err) {
+        console.error('Error hydrating persistent documents:', err);
+      }
+    }
+
+    hydratePersistentDocuments();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Synchronized notifications state
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
@@ -80,13 +168,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applications]);
 
-  // Persist documents
+  // Persist documents across localStorage and IndexedDB (no quota overflow on large base64 images)
   useEffect(() => {
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY_DOCS, JSON.stringify(documents));
+      // Clean docs representation for localStorage (omit heavy base64 to avoid quota limits)
+      const lightweightDocs = documents.map((doc) => {
+        if (doc.previewUrl && doc.previewUrl.startsWith('data:') && doc.previewUrl.length > 50000) {
+          return {
+            ...doc,
+            previewUrl: doc.fileUrl && !doc.fileUrl.startsWith('data:') ? doc.fileUrl : undefined,
+          };
+        }
+        return doc;
+      });
+      localStorage.setItem(LOCAL_STORAGE_KEY_DOCS, JSON.stringify(lightweightDocs));
     } catch (e) {
-      console.error('Failed to persist documents to localStorage', e);
+      console.warn('LocalStorage quota limit reached, saving full data into IndexedDB vault:', e);
     }
+
+    // Always preserve all documents into IndexedDB
+    documents.forEach((doc) => {
+      documentVaultDB.saveDocument(doc as unknown as Record<string, unknown>);
+    });
   }, [documents]);
 
   // Persist notifications
@@ -138,8 +241,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const newNotification: NotificationItem = {
       id: `NOTIF-${Date.now()}`,
       type: 'update',
-      title: 'New Clearance Docket Lodged',
-      message: `Application ${newApp.id} for "${newApp.name}" submitted successfully to ${newApp.department}.`,
+      title: 'New Clearance Application Filed',
+      message: `${payload.name} submitted under ${payload.department}. Ref: ${newId}`,
       time: 'Just now',
       read: false,
     };
@@ -148,10 +251,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return newApp;
   };
 
-  // 2. Admin approves application
+  // 2. Admin approves an application
   const approveApplication = (appId: string, officerName?: string) => {
     const todayStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    const signer = officerName || 'Dr. Sunita Kulkarni, IAS';
+    const signer = officerName || 'Divisional Competent Authority';
 
     setApplications((prev) =>
       prev.map((app) => {
@@ -160,13 +263,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             ...app,
             status: 'approved' as ApprovalStatus,
             progress: 100,
-            currentStage: 'Approved & Statutory Sanction Issued',
-            nextAction: `Statutory approval certificate granted and digitally signed by ${signer}.`,
+            currentStage: 'Statutory Clearance Granted (Certificate Issued)',
+            nextAction: `Final approval order signed by ${signer}. Download digitally signed certificate.`,
             lastUpdated: `Today (${todayStr})`,
-            timeline: [
-              ...app.timeline.map((step) => ({ ...step, status: 'done' as const })),
-              { label: 'Sanction Order Dispatched (Admin Approved)', status: 'done' as const, date: todayStr },
-            ],
+            delayRisk: 0,
+            riskLevel: 'Low' as const,
+            timeline: app.timeline.map((step) => ({ ...step, status: 'done' as const })),
             documents: app.documents.map((d) => ({ ...d, verified: true })),
           };
         }
@@ -285,7 +387,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // 6. User uploads document
   const uploadDocument = (newDoc: DocumentItem) => {
-    setDocuments((prev) => [newDoc, ...prev]);
+    setDocuments((prev) => {
+      const filtered = prev.filter((d) => d.id !== newDoc.id);
+      return [newDoc, ...filtered];
+    });
+
+    // Save directly to IndexedDB
+    documentVaultDB.saveDocument(newDoc as unknown as Record<string, unknown>);
 
     // Check if this document can auto-verify in any applications
     setApplications((prev) =>
@@ -301,7 +409,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  // 7. Mark notification read
+  // 7. Delete document
+  const deleteDocument = (docId: string) => {
+    setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    documentVaultDB.deleteDocument(docId);
+  };
+
+  // 8. Mark notification read
   const markNotificationAsRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
@@ -323,6 +437,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         respondToQuery,
         verifyDocument,
         uploadDocument,
+        deleteDocument,
         markNotificationAsRead,
       }}
     >
