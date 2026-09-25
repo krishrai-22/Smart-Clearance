@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   FolderOpen,
   Upload,
@@ -16,6 +16,8 @@ import {
   Database,
   ExternalLink,
   Trash2,
+  AlertCircle,
+  HelpCircle,
 } from 'lucide-react';
 import { type DocumentItem } from '@/data/mockData';
 import { useApp } from '@/context/AppContext';
@@ -42,8 +44,39 @@ export function DocumentsPage() {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<{
+    tested: boolean;
+    connected: boolean;
+    message: string;
+    details?: string;
+  }>({
+    tested: false,
+    connected: false,
+    message: 'Testing connection...',
+  });
+  const [showStatusModal, setShowStatusModal] = useState(false);
 
   const supabaseConfig = getSupabaseConfig();
+
+  // Test live Supabase connection on load
+  useEffect(() => {
+    let isMounted = true;
+    async function checkSupabase() {
+      const res = await documentStorage.testConnection();
+      if (isMounted) {
+        setConnectionStatus({
+          tested: true,
+          connected: res.connected,
+          message: res.message,
+          details: res.details,
+        });
+      }
+    }
+    checkSupabase();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleDocClick = (doc: DocumentItem) => {
     setSelectedDoc(doc);
@@ -178,10 +211,34 @@ export function DocumentsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold flex items-center gap-1.5">
-            <Database size={14} className="text-emerald-600" />
-            <span>Supabase Cloud Connected</span>
-          </span>
+          {connectionStatus.tested ? (
+            connectionStatus.connected ? (
+              <button
+                onClick={() => setShowStatusModal(true)}
+                className="text-xs px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold flex items-center gap-1.5 hover:bg-emerald-100 transition-colors cursor-pointer"
+                title="Click to view connection details"
+              >
+                <Database size={14} className="text-emerald-600" />
+                <span>Supabase Cloud: Connected</span>
+                <CheckCircle2 size={13} className="text-emerald-600 ml-0.5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowStatusModal(true)}
+                className="text-xs px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 font-semibold flex items-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
+                title="Click to see why and how to connect"
+              >
+                <AlertCircle size={14} className="text-amber-600" />
+                <span>Supabase: Not Connected (Click to Fix)</span>
+                <HelpCircle size={13} className="text-amber-600 ml-0.5" />
+              </button>
+            )
+          ) : (
+            <span className="text-xs px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700 border border-gray-200 font-medium flex items-center gap-1.5">
+              <Loader2 size={13} className="animate-spin text-gray-500" />
+              <span>Checking Supabase...</span>
+            </span>
+          )}
 
           <span className="text-xs px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700 border border-gray-200 font-medium flex items-center gap-1.5">
             <ShieldCheck size={14} className="text-indigo-600" />
@@ -511,6 +568,87 @@ export function DocumentsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Supabase Status & Setup Helper Modal */}
+      {showStatusModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onClick={() => setShowStatusModal(false)} />
+          <div className="relative card w-full max-w-lg p-6 bg-white shadow-2xl animate-scale-in">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Database size={20} className={connectionStatus.connected ? 'text-emerald-600' : 'text-amber-600'} />
+                <h3 className="font-bold text-gray-900">Supabase Connection Diagnostics</h3>
+              </div>
+              <button onClick={() => setShowStatusModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4 text-sm">
+              <div
+                className={`p-3.5 rounded-xl border flex items-start gap-3 ${
+                  connectionStatus.connected
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                    : 'bg-amber-50 border-amber-200 text-amber-900'
+                }`}
+              >
+                {connectionStatus.connected ? (
+                  <CheckCircle2 size={20} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <p className="font-semibold">{connectionStatus.connected ? 'Successfully Connected!' : 'Not Connected Yet'}</p>
+                  <p className="text-xs mt-1">{connectionStatus.message}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Environment Status</p>
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 space-y-1.5 text-xs font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">VITE_SUPABASE_URL:</span>
+                    <span className="font-semibold text-gray-800">
+                      {supabaseConfig.url ? `${supabaseConfig.url.slice(0, 22)}...` : 'Not Set (Empty)'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">VITE_SUPABASE_ANON_KEY:</span>
+                    <span className="font-semibold text-gray-800">
+                      {supabaseConfig.key ? 'Configured (Active)' : 'Not Set (Empty)'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Storage Bucket:</span>
+                    <span className="font-semibold text-gray-800">{supabaseConfig.bucket}</span>
+                  </div>
+                </div>
+              </div>
+
+              {!connectionStatus.connected && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3.5 text-xs text-indigo-950 space-y-2">
+                  <p className="font-bold flex items-center gap-1.5 text-indigo-900">
+                    <Sparkles size={14} className="text-indigo-600" />
+                    How to connect in 2 minutes on Vercel:
+                  </p>
+                  <ol className="list-decimal pl-4 space-y-1 text-indigo-900">
+                    <li>Open your project settings on <b>Vercel Dashboard &gt; Environment Variables</b>.</li>
+                    <li>Add <b>VITE_SUPABASE_URL</b> = your project URL (from Supabase &gt; Settings &gt; API).</li>
+                    <li>Add <b>VITE_SUPABASE_ANON_KEY</b> = your anon public key.</li>
+                    <li>In Supabase &gt; Storage, make sure bucket <b>documents</b> is created & set to <b>Public</b>.</li>
+                    <li>Redeploy your Vercel deployment to apply changes!</li>
+                  </ol>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button onClick={() => setShowStatusModal(false)} className="btn-primary text-xs py-2 px-4">
+                Done
+              </button>
             </div>
           </div>
         </div>

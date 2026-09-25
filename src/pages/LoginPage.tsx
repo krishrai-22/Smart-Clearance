@@ -99,8 +99,8 @@ export function LoginPage({ onLogin, onBack, initialRole = 'applicant' }: LoginP
             >
               <ArrowLeft size={16} /> Back to portal overview
             </button>
-            <div className="inline-flex rounded-xl bg-white/10 backdrop-blur-md p-2.5 border border-white/20 mb-6">
-              <Logo size={36} />
+            <div className="inline-flex items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-md p-2.5 pr-4 border border-white/20 mb-6">
+              <Logo size={40} textClass="text-white" />
             </div>
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 ${

@@ -105,6 +105,42 @@ export const documentStorage = {
     return getSupabaseConfig().isConfigured;
   },
 
+  // Test live connection to Supabase and return diagnostic information
+  async testConnection(): Promise<{ connected: boolean; message: string; details?: string }> {
+    const config = getSupabaseConfig();
+    if (!config.url || !config.key) {
+      return {
+        connected: false,
+        message: 'Missing credentials: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are not configured.',
+      };
+    }
+
+    try {
+      const client = createClient(config.url, config.key);
+      // Attempt to list buckets to test auth & connectivity
+      const { data, error } = await client.storage.listBuckets();
+      if (error) {
+        return {
+          connected: false,
+          message: `Supabase reached but returned error: ${error.message}`,
+          details: 'Check if the anon key is correct and bucket "documents" is public.',
+        };
+      }
+      const hasBucket = data?.some((b) => b.name === config.bucket);
+      return {
+        connected: true,
+        message: hasBucket
+          ? `Connected to Supabase! Bucket "${config.bucket}" is active and ready.`
+          : `Connected to Supabase! Note: Please ensure a bucket named "${config.bucket}" is created in Supabase Storage.`,
+      };
+    } catch (err) {
+      return {
+        connected: false,
+        message: `Connection failed: ${err instanceof Error ? err.message : 'Network error'}`,
+      };
+    }
+  },
+
   async uploadFile(
     file: File,
     pathPrefix = 'clearance-docs'
