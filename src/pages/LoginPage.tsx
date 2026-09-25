@@ -262,13 +262,12 @@ export function LoginPage({ onLogin, onBack, initialRole = 'applicant' }: LoginP
                 {role === 'admin' ? 'Official Gov Email ID / Officer Code' : 'Registered Business Email ID'}
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={role === 'admin' ? 'officer@singlewindow.gov.in' : 'entrepreneur@industry.com'}
-                  className="input-field pl-10 text-xs py-2.5"
+                  className="input-field text-xs py-2.5 px-3.5"
                   required
                 />
               </div>
@@ -277,13 +276,12 @@ export function LoginPage({ onLogin, onBack, initialRole = 'applicant' }: LoginP
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Password</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your account password"
-                  className="input-field pl-10 pr-10 text-xs py-2.5"
+                  className="input-field pl-3.5 pr-10 text-xs py-2.5"
                   required
                 />
                 <button
