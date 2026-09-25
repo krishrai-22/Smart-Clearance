@@ -1,0 +1,8 @@
+{
+  "name": "Remix Smart Clearance",
+  "description": "Unified government clearance and approvals workflow platform with AI insights, document verification, and compliance monitoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
